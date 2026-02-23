@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raiz Academy — Player Customizado</title>
+
+  <!-- Plyr.js -->
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ═══════════════════════════════════════
+       CSS CUSTOM PROPERTIES
+       ═══════════════════════════════════════ */
+    :root {
+      /* Palette */
+      --bg-deep: #07070c;
+      --bg-primary: #0e0e16;
+      --bg-surface: #16161f;
+      --bg-surface-hover: #1e1e2a;
+      --bg-elevated: #222233;
+
+      --accent: #e4a229;
+      --accent-glow: #f0b84080;
+      --accent-soft: #e4a22920;
+      --accent-hover: #f0c050;
+
+      --text-primary: #f0ebe4;
+      --text-secondary: #9590a0;
+      --text-muted: #5c5870;
+
+      --success: #34d399;
+      --success-soft: #34d39920;
+
+      --border: #ffffff08;
+      --border-subtle: #ffffff05;
+
+      /* Plyr overrides */
+      --plyr-color-main: var(--accent);
+      --plyr-video-control-color: var(--text-primary);
+      --plyr-video-control-color-hover: var(--accent);
+      --plyr-video-controls-background: linear-gradient(transparent, rgba(7, 7, 12, 0.92));
+      --plyr-menu-background: var(--bg-elevated);
+      --plyr-menu-color: var(--text-primary);
+      --plyr-badge-background: var(--accent);
+      --plyr-badge-text-color: var(--bg-deep);
+      --plyr-tooltip-background: var(--bg-elevated);
+      --plyr-tooltip-color: var(--text-primary);
+      --plyr-range-thumb-background: var(--accent);
+      --plyr-range-fill-background: var(--accent);
+      --plyr-range-track-height: 4px;
+      --plyr-range-thumb-height: 14px;
+      --plyr-range-thumb-shadow: 0 0 12px var(--accent-glow);
+      --plyr-audio-controls-background: var(--bg-surface);
+      --plyr-font-family: 'Outfit', sans-serif;
+      --plyr-font-size-base: 14px;
+      --plyr-control-spacing: 12px;
+
+      /* Layout */
+      --sidebar-width: 380px;
+      --header-height: 64px;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    /* ═══════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ═══════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-height);
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      backdrop-filter: blur(20px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.5rem;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .breadcrumb svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.4;
+    }
+
+    .breadcrumb a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--accent);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .progress-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .progress-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #e06030);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--bg-deep);
+      cursor: pointer;
+      transition: box-shadow 0.3s;
+    }
+
+    .avatar:hover {
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    /* ═══════════════════════════════════════
+       MAIN LAYOUT
+       ═══════════════════════════════════════ */
+    .layout {
+      display: flex;
+      height: calc(100vh - var(--header-height));
+    }
+
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* ═══════════════════════════════════════
+       PLAYER AREA
+       ═══════════════════════════════════════ */
+    .player-wrapper {
+      position: relative;
+      background: #000;
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /*
+     * Custom branding logo (top-left) via ::before
+     * Technique from: github.com/sampotts/plyr/issues/506
+     */
+    .plyr__video-wrapper::before {
+      content: 'raiz.';
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      z-index: 10;
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.7);
+      pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .plyr:hover .plyr__video-wrapper::before,
+    .plyr--paused .plyr__video-wrapper::before {
+      opacity: 1;
+    }
+
+    /*
+     * YouTube watermark cover (bottom-right) via ::after
+     * Sits above iframe but below Plyr controls
+     */
+
+    /* Plyr custom overrides */
+    .plyr {
+      --plyr-video-control-background-hover: var(--accent-soft);
+      border-radius: 0;
+    }
+
+    .plyr__controls {
+      padding: 14px 16px !important;
+    }
+
+    .plyr__control--overlaid {
+      background: var(--accent) !important;
+      box-shadow: 0 0 40px var(--accent-glow), 0 4px 20px rgba(0,0,0,0.4) !important;
+      border-radius: 50% !important;
+      width: 64px !important;
+      height: 64px !important;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s !important;
+    }
+
+    .plyr__control--overlaid:hover {
+      transform: scale(1.12) !important;
+      background: var(--accent-hover) !important;
+    }
+
+    .plyr__control--overlaid svg {
+      fill: var(--bg-deep) !important;
+      width: 22px !important;
+      height: 22px !important;
+      margin-left: 3px;
+    }
+
+    .plyr__menu__container {
+      background: var(--bg-elevated) !important;
+      border-radius: var(--radius-sm) !important;
+      border: 1px solid var(--border) !important;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
+    }
+
+    .plyr__menu__container label.plyr__control input[type=radio]:checked + span {
+      background: var(--accent) !important;
+      color: var(--bg-deep) !important;
+    }
+
+    .plyr__progress input[type=range] {
+      color: var(--accent) !important;
+    }
+
+    .plyr__tooltip {
+      border-radius: 6px !important;
+      font-weight: 500 !important;
+    }
+
+    /* ═══════════════════════════════════════
+       LESSON INFO BAR
+       ═══════════════════════════════════════ */
+    .lesson-info {
+      padding: 24px 32px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .lesson-info-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 16px;
+    }
+
+    .lesson-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .lesson-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .lesson-number {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .lesson-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.6rem;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .lesson-actions {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      outline: none;
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg-deep);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-color: #ffffff15;
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-primary);
+      border-color: #ffffff20;
+    }
+
+    .btn-complete {
+      background: var(--success-soft);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .btn-complete:hover {
+      background: var(--success);
+      color: var(--bg-deep);
+    }
+
+    .lesson-description {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 700px;
+    }
+
+    /* ═══════════════════════════════════════
+       CUSTOM SPEED CONTROLS
+       ═══════════════════════════════════════ */
+    .speed-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 32px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .speed-label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .speed-buttons {
+      display: flex;
+      gap: 4px;
+    }
+
+    .speed-btn {
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-color: #ffffff10;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .speed-btn:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-primary);
+      border-color: #ffffff20;
+    }
+
+    .speed-btn.active {
+      background: var(--accent);
+      color: var(--bg-deep);
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .speed-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      background: #ffffff10;
+      margin: 0 8px;
+    }
+
+    .shortcut-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .shortcut-hint kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-surface);
+      border: 1px solid #ffffff10;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      min-width: 22px;
+    }
+
+    /* ═══════════════════════════════════════
+       SIDEBAR
+       ═══════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-primary);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.15rem;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .sidebar-progress {
+      margin-top: 14px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-surface);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #f0c050);
+      border-radius: 100px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .progress-text span:last-child {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Module list */
+    .module-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .module-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .module-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .module-list::-webkit-scrollbar-thumb {
+      background: var(--text-muted);
+      border-radius: 100px;
+    }
+
+    .module-group {
+      margin-bottom: 4px;
+    }
+
+    .module-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .module-header:hover {
+      background: var(--bg-surface);
+    }
+
+    .module-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .module-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .module-icon.completed {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: var(--success);
+    }
+
+    .module-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .module-count {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .module-chevron {
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+      transition: transform 0.25s;
+    }
+
+    .module-group.open .module-chevron {
+      transform: rotate(180deg);
+    }
+
+    .lesson-list {
+      display: none;
+    }
+
+    .module-group.open .lesson-list {
+      display: block;
+    }
+
+    .lesson-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 24px 10px 62px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .lesson-item::before {
+      content: '';
+      position: absolute;
+      left: 37px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--border);
+      background: #ffffff08;
+    }
+
+    .lesson-item:hover {
+      background: var(--bg-surface);
+    }
+
+    .lesson-item.active {
+      background: var(--accent-soft);
+    }
+
+    .lesson-item.active::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 0 3px 3px 0;
+    }
+
+    .lesson-status {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .lesson-item.active .lesson-status {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .lesson-item.active .lesson-status svg {
+      display: block;
+    }
+
+    .lesson-item.completed .lesson-status {
+      border-color: var(--success);
+      background: var(--success);
+    }
+
+    .lesson-status svg {
+      width: 10px;
+      height: 10px;
+      display: none;
+      color: var(--bg-deep);
+    }
+
+    .lesson-item.completed .lesson-status svg {
+      display: block;
+    }
+
+    .lesson-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .lesson-item-name {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.15s;
+    }
+
+    .lesson-item.active .lesson-item-name {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .lesson-item.completed .lesson-item-name {
+      color: var(--text-muted);
+    }
+
+    .lesson-item-duration {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ═══════════════════════════════════════
+       NOTES SECTION
+       ═══════════════════════════════════════ */
+    .notes-section {
+      padding: 24px 32px;
+      flex: 1;
+    }
+
+    .notes-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .notes-tab {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: none;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .notes-tab:hover {
+      color: var(--text-secondary);
+    }
+
+    .notes-tab.active {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+    }
+
+    .notes-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      min-height: 80px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .notes-content p {
+      opacity: 0.5;
+      font-style: italic;
+    }
+
+    /* ═══════════════════════════════════════
+       KEYBOARD SHORTCUTS PANEL
+       ═══════════════════════════════════════ */
+    .shortcuts-panel {
+      position: fixed;
+      bottom: 24px;
+      right: calc(var(--sidebar-width) + 24px);
+      background: var(--bg-elevated);
+      border: 1px solid #ffffff15;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+      z-index: 200;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .shortcuts-panel.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .shortcuts-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .shortcut-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 4px 0;
+    }
+
+    .shortcut-row span {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .shortcut-row kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--bg-surface);
+      border: 1px solid #ffffff10;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      min-width: 26px;
+    }
+
+    /* ═══════════════════════════════════════
+       ANIMATIONS
+       ═══════════════════════════════════════ */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .animate-delay-1 { animation-delay: 0.05s; }
+    .animate-delay-2 { animation-delay: 0.1s; }
+    .animate-delay-3 { animation-delay: 0.15s; }
+    .animate-delay-4 { animation-delay: 0.2s; }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .sidebar {
+        display: none;
+      }
+
+      .shortcuts-panel {
+        right: 24px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .header {
+        padding: 0 16px;
+      }
+
+      .breadcrumb {
+        display: none;
+      }
+
+      .lesson-info {
+        padding: 16px;
+      }
+
+      .lesson-title {
+        font-size: 1.2rem;
+      }
+
+      .lesson-actions {
+        flex-direction: column;
+      }
+
+      .speed-controls {
+        padding: 12px 16px;
+        overflow-x: auto;
+      }
+
+      .notes-section {
+        padding: 16px;
+      }
+    }
+
+    /* ═══════════════════════════════════════
+       TOAST NOTIFICATIONS
+       ═══════════════════════════════════════ */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg-elevated);
+      border: 1px solid #ffffff15;
+      border-radius: var(--radius-sm);
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast svg {
+      width: 16px;
+      height: 16px;
+      color: var(--success);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════ HEADER ═══════ -->
+  <header class="header animate-in">
+    <div class="header-left">
+      <div class="logo">raiz<span>.</span></div>
+      <div class="breadcrumb">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        <a href="#">Meus Cursos</a>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        <a href="#">Desenvolvimento Web</a>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="progress-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        3 de 12 aulas
+      </div>
+      <div class="avatar">JR</div>
+    </div>
+  </header>
+
+  <!-- ═══════ MAIN LAYOUT ═══════ -->
+  <div class="layout">
+
+    <!-- ═══════ MAIN CONTENT ═══════ -->
+    <div class="main-content">
+
+      <!-- Player -->
+      <div class="player-wrapper animate-in animate-delay-1">
+        <div class="plyr__video-embed" id="player">
+          <iframe
+            src="https://www.youtube.com/embed/KMvFqwHtehU?origin=https://plyr.io&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1&amp;controls=0&amp;disablekb=1"
+            allowfullscreen
+            allowtransparency
+            allow="autoplay"
+          ></iframe>
+        </div>
+      </div>
+
+      <!-- Lesson Info -->
+      <div class="lesson-info animate-in animate-delay-2">
+        <div class="lesson-info-top">
+          <div>
+            <div class="lesson-meta">
+              <span class="lesson-tag">Aula ao vivo</span>
+              <span class="lesson-number">Aula 4 de 12</span>
+            </div>
+            <h1 class="lesson-title">Construindo Interfaces Modernas</h1>
+          </div>
+          <div class="lesson-actions">
+            <button class="btn btn-ghost" onclick="toggleShortcuts()" title="Atalhos do teclado">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/></svg>
+              Atalhos
+            </button>
+            <button class="btn btn-complete" id="markCompleteBtn" onclick="toggleComplete()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+              Marcar como concluída
+            </button>
+            <button class="btn btn-primary" onclick="nextLesson()">
+              Próxima aula
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="lesson-description">
+          Nesta aula exploramos técnicas avançadas de CSS e design de interfaces com foco em acessibilidade, responsividade e performance. Aprenda a criar layouts complexos com Grid e Flexbox.
+        </p>
+      </div>
+
+      <!-- Speed Controls -->
+      <div class="speed-controls animate-in animate-delay-3">
+        <span class="speed-label">Velocidade</span>
+        <div class="speed-buttons">
+          <button class="speed-btn" data-speed="0.5">0.5x</button>
+          <button class="speed-btn" data-speed="0.75">0.75x</button>
+          <button class="speed-btn active" data-speed="1">1x</button>
+          <button class="speed-btn" data-speed="1.25">1.25x</button>
+          <button class="speed-btn" data-speed="1.5">1.5x</button>
+          <button class="speed-btn" data-speed="1.75">1.75x</button>
+          <button class="speed-btn" data-speed="2">2x</button>
+        </div>
+        <div class="speed-divider"></div>
+        <div class="shortcut-hint">
+          <kbd>Shift</kbd> + <kbd>&lt;</kbd> / <kbd>&gt;</kbd>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="notes-section animate-in animate-delay-4">
+        <div class="notes-header">
+          <button class="notes-tab active">Anotações</button>
+          <button class="notes-tab">Recursos</button>
+          <button class="notes-tab">Discussão</button>
+        </div>
+        <div class="notes-content" contenteditable="true" spellcheck="false">
+          <p>Clique aqui para adicionar suas anotações sobre esta aula...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ SIDEBAR ═══════ -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Desenvolvimento Web Moderno</div>
+        <div class="sidebar-subtitle">12 aulas &middot; 8h 30min</div>
+        <div class="sidebar-progress">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: 25%"></div>
+          </div>
+          <div class="progress-text">
+            <span>3 concluídas</span>
+            <span>25%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="module-list">
+        <!-- Module 1 -->
+        <div class="module-group">
+          <div class="module-header" onclick="toggleModule(this)">
+            <div class="module-header-left">
+              <div class="module-icon completed">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>
+                <div class="module-name">Fundamentos</div>
+                <div class="module-count">3 aulas &middot; 2h 15min</div>
+              </div>
+            </div>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="lesson-list">
+            <div class="lesson-item completed">
+              <div class="lesson-status">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">Introdução ao HTML5</div>
+                <div class="lesson-item-duration">45 min</div>
+              </div>
+            </div>
+            <div class="lesson-item completed">
+              <div class="lesson-status">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">CSS3 e Flexbox</div>
+                <div class="lesson-item-duration">50 min</div>
+              </div>
+            </div>
+            <div class="lesson-item completed">
+              <div class="lesson-status">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">JavaScript Essencial</div>
+                <div class="lesson-item-duration">40 min</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Module 2 (Current) -->
+        <div class="module-group open">
+          <div class="module-header" onclick="toggleModule(this)">
+            <div class="module-header-left">
+              <div class="module-icon">02</div>
+              <div>
+                <div class="module-name">Interfaces Avançadas</div>
+                <div class="module-count">4 aulas &middot; 3h 00min</div>
+              </div>
+            </div>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="lesson-list">
+            <div class="lesson-item active">
+              <div class="lesson-status">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="8" height="8"><circle cx="12" cy="12" r="4"/></svg>
+              </div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">Construindo Interfaces Modernas</div>
+                <div class="lesson-item-duration">55 min &middot; Assistindo</div>
+              </div>
+            </div>
+            <div class="lesson-item">
+              <div class="lesson-status"></div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">CSS Grid na Prática</div>
+                <div class="lesson-item-duration">45 min</div>
+              </div>
+            </div>
+            <div class="lesson-item">
+              <div class="lesson-status"></div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">Animações e Transições</div>
+                <div class="lesson-item-duration">40 min</div>
+              </div>
+            </div>
+            <div class="lesson-item">
+              <div class="lesson-status"></div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">Design Responsivo</div>
+                <div class="lesson-item-duration">40 min</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Module 3 -->
+        <div class="module-group">
+          <div class="module-header" onclick="toggleModule(this)">
+            <div class="module-header-left">
+              <div class="module-icon">03</div>
+              <div>
+                <div class="module-name">Backend & APIs</div>
+                <div class="module-count">3 aulas &middot; 2h 15min</div>
+              </div>
+            </div>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="lesson-list">
+            <div class="lesson-item">
+              <div class="lesson-status"></div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">Node.js e Express</div>
+                <div class="lesson-item-duration">50 min</div>
+              </div>
+            </div>
+            <div class="lesson-item">
+              <div class="lesson-status"></div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">APIs RESTful</div>
+                <div class="lesson-item-duration">45 min</div>
+              </div>
+            </div>
+            <div class="lesson-item">
+              <div class="lesson-status"></div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">Deploy e DevOps</div>
+                <div class="lesson-item-duration">40 min</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Module 4 -->
+        <div class="module-group">
+          <div class="module-header" onclick="toggleModule(this)">
+            <div class="module-header-left">
+              <div class="module-icon">04</div>
+              <div>
+                <div class="module-name">Projeto Final</div>
+                <div class="module-count">2 aulas &middot; 1h 00min</div>
+              </div>
+            </div>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="lesson-list">
+            <div class="lesson-item">
+              <div class="lesson-status"></div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">Planejamento do Projeto</div>
+                <div class="lesson-item-duration">30 min</div>
+              </div>
+            </div>
+            <div class="lesson-item">
+              <div class="lesson-status"></div>
+              <div class="lesson-item-info">
+                <div class="lesson-item-name">Apresentação Final</div>
+                <div class="lesson-item-duration">30 min</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ═══════ SHORTCUTS PANEL ═══════ -->
+  <div class="shortcuts-panel" id="shortcutsPanel">
+    <div class="shortcuts-title">Atalhos do Teclado</div>
+    <div class="shortcut-row"><span>Play / Pause</span><kbd>Space</kbd></div>
+    <div class="shortcut-row"><span>Avançar 10s</span><kbd>&rarr;</kbd></div>
+    <div class="shortcut-row"><span>Voltar 10s</span><kbd>&larr;</kbd></div>
+    <div class="shortcut-row"><span>Volume +</span><kbd>&uarr;</kbd></div>
+    <div class="shortcut-row"><span>Volume -</span><kbd>&darr;</kbd></div>
+    <div class="shortcut-row"><span>Fullscreen</span><kbd>F</kbd></div>
+    <div class="shortcut-row"><span>Mudo</span><kbd>M</kbd></div>
+    <div class="shortcut-row"><span>Mais rápido</span><kbd>Shift</kbd> + <kbd>&gt;</kbd></div>
+    <div class="shortcut-row"><span>Mais lento</span><kbd>Shift</kbd> + <kbd>&lt;</kbd></div>
+  </div>
+
+  <!-- ═══════ TOAST ═══════ -->
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toastMessage"></span>
+  </div>
+
+  <!-- ═══════ SCRIPTS ═══════ -->
+  <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+  <script>
+    // ─── Player Init ───
+    const player = new Plyr('#player', {
+      controls: [
+        'play-large',
+        'play',
+        'progress',
+        'current-time',
+        'duration',
+        'mute',
+        'volume',
+        'captions',
+        'settings',
+        'pip',
+        'airplay',
+        'fullscreen'
+      ],
+      settings: ['captions', 'quality', 'speed'],
+      speed: {
+        selected: 1,
+        options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+      },
+      tooltips: { controls: true, seek: true },
+      keyboard: { focused: true, global: true },
+      youtube: {
+        noCookie: true,
+        rel: 0,
+        showinfo: 0,
+        iv_load_policy: 3,
+        modestbranding: 1
+      }
+    });
+
+    // Sync speed buttons with player
+    player.on('ratechange', () => {
+      updateSpeedButtons(player.speed);
+    });
+
+    // ─── Speed Buttons ───
+    const speedBtns = document.querySelectorAll('.speed-btn');
+
+    speedBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const speed = parseFloat(btn.dataset.speed);
+        player.speed = speed;
+        updateSpeedButtons(speed);
+        showToast(`Velocidade: ${speed}x`);
+      });
+    });
+
+    function updateSpeedButtons(speed) {
+      speedBtns.forEach(b => {
+        b.classList.toggle('active', parseFloat(b.dataset.speed) === speed);
+      });
+    }
+
+    // ─── Keyboard speed shortcuts ───
+    document.addEventListener('keydown', (e) => {
+      if (e.shiftKey && e.key === '>') {
+        const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+        const current = player.speed;
+        const idx = speeds.indexOf(current);
+        if (idx < speeds.length - 1) {
+          player.speed = speeds[idx + 1];
+          updateSpeedButtons(speeds[idx + 1]);
+          showToast(`Velocidade: ${speeds[idx + 1]}x`);
+        }
+      }
+      if (e.shiftKey && e.key === '<') {
+        const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+        const current = player.speed;
+        const idx = speeds.indexOf(current);
+        if (idx > 0) {
+          player.speed = speeds[idx - 1];
+          updateSpeedButtons(speeds[idx - 1]);
+          showToast(`Velocidade: ${speeds[idx - 1]}x`);
+        }
+      }
+    });
+
+    // ─── Module Toggle ───
+    function toggleModule(header) {
+      const group = header.closest('.module-group');
+      group.classList.toggle('open');
+    }
+
+    // ─── Mark Complete ───
+    let isComplete = false;
+    function toggleComplete() {
+      isComplete = !isComplete;
+      const btn = document.getElementById('markCompleteBtn');
+      if (isComplete) {
+        btn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+          Concluída!
+        `;
+        btn.classList.add('btn-complete-done');
+        btn.style.background = 'var(--success)';
+        btn.style.color = 'var(--bg-deep)';
+        btn.style.borderColor = 'var(--success)';
+        showToast('Aula marcada como concluída!');
+
+        // Update sidebar active item
+        const activeItem = document.querySelector('.lesson-item.active');
+        if (activeItem) {
+          activeItem.classList.add('completed');
+        }
+
+        // Update progress
+        updateProgress(4, 12);
+      } else {
+        btn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+          Marcar como concluída
+        `;
+        btn.style.background = 'var(--success-soft)';
+        btn.style.color = 'var(--success)';
+        btn.style.borderColor = 'var(--success)';
+        showToast('Aula desmarcada');
+
+        const activeItem = document.querySelector('.lesson-item.active');
+        if (activeItem) {
+          activeItem.classList.remove('completed');
+        }
+
+        updateProgress(3, 12);
+      }
+    }
+
+    function updateProgress(completed, total) {
+      const pct = Math.round((completed / total) * 100);
+      document.querySelector('.progress-bar-fill').style.width = pct + '%';
+      document.querySelector('.progress-text span:first-child').textContent = completed + ' concluídas';
+      document.querySelector('.progress-text span:last-child').textContent = pct + '%';
+      document.querySelector('.progress-badge').innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        ${completed} de ${total} aulas
+      `;
+    }
+
+    // ─── Next Lesson ───
+    function nextLesson() {
+      showToast('Próxima aula: CSS Grid na Prática');
+    }
+
+    // ─── Shortcuts Panel ───
+    let shortcutsVisible = false;
+    function toggleShortcuts() {
+      shortcutsVisible = !shortcutsVisible;
+      document.getElementById('shortcutsPanel').classList.toggle('visible', shortcutsVisible);
+    }
+
+    // Close shortcuts when clicking outside
+    document.addEventListener('click', (e) => {
+      if (shortcutsVisible && !e.target.closest('.shortcuts-panel') && !e.target.closest('.btn-ghost')) {
+        shortcutsVisible = false;
+        document.getElementById('shortcutsPanel').classList.remove('visible');
+      }
+    });
+
+    // ─── Notes tabs ───
+    document.querySelectorAll('.notes-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.notes-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+
+    // Clear notes placeholder on focus
+    const notesContent = document.querySelector('.notes-content');
+    notesContent.addEventListener('focus', function() {
+      if (this.querySelector('p')) {
+        this.innerHTML = '';
+      }
+    });
+
+    notesContent.addEventListener('blur', function() {
+      if (this.textContent.trim() === '') {
+        this.innerHTML = '<p>Clique aqui para adicionar suas anotações sobre esta aula...</p>';
+      }
+    });
+
+    // ─── Toast ───
+    let toastTimeout;
+    function showToast(message) {
+      clearTimeout(toastTimeout);
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = message;
+      toast.classList.add('show');
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    // ─── Lesson click handler ───
+    document.querySelectorAll('.lesson-item').forEach(item => {
+      item.addEventListener('click', () => {
+        showToast('Navegação entre aulas (demo)');
+      });
+    });
+  </script>
+
+</body>
+</html>
